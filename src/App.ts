@@ -1,24 +1,15 @@
-import { IPooledObject } from "./IPooledObject";
-import { Keyboard } from "./Keyboard";
-import { Player } from "./Player";
-import { Projectile } from "./Projectile";
-import { ProjectilePool } from "./ProjectilePool";
+import { IDrawable } from "./IDrawable";
 
-export class App
-{
-	private static readonly COEFF = 0.6;
-	public static readonly TILE_SIZE = 50;
-	public static readonly WIDTH = 720 * App.COEFF;
-	public static readonly HEIGHT = 1280 * App.COEFF;
+export class App {
+	public static readonly WIDTH = 720;
+	public static readonly HEIGHT = 720;
 	private readonly canvas: HTMLCanvasElement;
 	private readonly ctx: CanvasRenderingContext2D;
-	private readonly keyboard = new Keyboard();
-	private readonly player = new Player();
-	private readonly projectiles: ProjectilePool = new ProjectilePool();
+
+	private readonly gameElements: IDrawable[] = [];
 	private lastDeltaTime = 0;
 
-	constructor()
-	{
+	constructor() {
 		this.canvas = document.getElementsByTagName("canvas")[0];
 		this.canvas.width = App.WIDTH;
 		this.canvas.height = App.HEIGHT;
@@ -28,26 +19,20 @@ export class App
 	}
 
 	public update(delta: number) {
-		if (this.keyboard.isPressed("ArrowUp") || this.keyboard.isPressed("Space")) {
-			this.projectiles.shoot(this.player.getPosition());
-		}
-		this.projectiles.update(delta);
-		this.projectiles.apply((projectile) => projectile.update(delta));
-
-		this.player.move(
-			this.keyboard.isPressed("ArrowLeft") ? -1 :
-			this.keyboard.isPressed("ArrowRight") ? 1 : 0,
-		);
-		this.player.update(delta);
+		
 	}
 	public render = (elapsedTime: number) => {
 		this.ctx.clearRect(0, 0, App.WIDTH, App.HEIGHT);
 		this.update((elapsedTime - this.lastDeltaTime) / 1000);
-		this.projectiles.apply((projectile) => projectile.draw(this.ctx));
-		this.player.draw(this.ctx);
+		if (false) {
+			this.ctx.save();
+			this.ctx.translate(Math.random() * 4, Math.random() * 4);
+		}
+		this.gameElements.forEach((elem) => elem.draw(this.ctx));
+		this.ctx.restore();
 		this.lastDeltaTime = elapsedTime;
 		requestAnimationFrame(this.render);
-	}
+	};
 }
 
 document.addEventListener("DOMContentLoaded", () => new App());

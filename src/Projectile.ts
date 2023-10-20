@@ -1,30 +1,23 @@
-import { IPooledObject } from "./IPooledObject";
-import { ASpaceInvaderSprites } from "./ASpaceInvaderSprites";
+import { IPooledObject } from "./pools/IPooledObject";
 import { Vector2 } from "./Vector2";
-import { App } from "./App";
 
-export class Projectile extends ASpaceInvaderSprites implements IPooledObject {
-  private vy = -500;
+export class Projectile implements IPooledObject {
   private free = true;
 
-  constructor() {
-    super({ x: 2, y: 0 });
-  }
-
-  public launch(position: Vector2) {
-    this.position = position;
+  public trigger(position: Readonly<Vector2>) {
     this.free = false;
   }
   public kill() {
     this.free = true;
   }
-  public update(delta: number) {
-    this.position.y += this.vy * delta;
-    if (this.position.y < -App.TILE_SIZE) {
-      this.kill();
-    }
+  public update(delta: number): void {
+    throw new Error("Method not implemented.");
   }
-  public get isAvailable() {
-    return (this.free);
+  public draw(ctx: CanvasRenderingContext2D): void {
+    throw new Error("Method not implemented.");
+  }
+
+  public get isAlive() {
+    return (!this.free);
   }
 }
