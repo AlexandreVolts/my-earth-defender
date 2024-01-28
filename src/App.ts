@@ -1,6 +1,7 @@
 import { IDrawable } from "./IDrawable";
 import { Planet } from "./Planet";
 import { Player } from "./Player";
+import { EnemyPool } from "./pools/EnemyPool";
 import { ProjectilePool } from "./pools/ProjectilePool";
 
 export class App {
@@ -11,6 +12,7 @@ export class App {
 	private readonly player = new Player();
 	private readonly planet = new Planet();
 	private readonly projectiles = new ProjectilePool(10);
+	private readonly enemies = new EnemyPool(10);
 
 	private readonly gameElements: IDrawable[] = [];
 	private lastDeltaTime = 0;
@@ -24,7 +26,15 @@ export class App {
 		this.ctx.imageSmoothingEnabled = false;
 		this.gameElements.push(this.planet);
 		this.gameElements.push(this.projectiles);
+		this.gameElements.push(this.enemies);
 		this.gameElements.push(this.player);
+		this.enemies.trigger();
+		this.enemies.trigger();
+
+		this.enemies.trigger();
+
+		this.enemies.trigger();
+
 		window.addEventListener("mousemove", (e) => {
 			this.player.setAngle(e.x - this.canvas.offsetLeft, e.y);
 		});

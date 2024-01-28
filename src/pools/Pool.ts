@@ -3,7 +3,7 @@ import { Vector2 } from "../Vector2";
 import { IPooledObject } from "./IPooledObject";
 
 export class Pool<T extends IPooledObject> extends Array<T> implements IDrawable {
-  public trigger(position: Readonly<Vector2>) {
+  public trigger(position: Readonly<Vector2> = { x: 0, y: 0 }) {
     super.find((item) => !item.isAlive)?.trigger(position);
   }
   public apply = (callback: (item: T) => void) => super.filter((item) => item.isAlive).forEach(callback);
