@@ -28,12 +28,6 @@ export class App {
 		this.gameElements.push(this.projectiles);
 		this.gameElements.push(this.enemies);
 		this.gameElements.push(this.player);
-		this.enemies.trigger();
-		this.enemies.trigger();
-
-		this.enemies.trigger();
-
-		this.enemies.trigger();
 
 		window.addEventListener("mousemove", (e) => {
 			this.player.setAngle(e.x - this.canvas.offsetLeft, e.y);
@@ -47,7 +41,15 @@ export class App {
 		if (this.isMouseDown) this.projectiles.trigger(this.player.position);
 		this.gameElements.forEach((elem) => elem.update(delta));
 		this.projectiles.forEach((projectile) => {
+			if (!projectile.isAlive) return;
 			if (!projectile.isInside) projectile.kill();
+			this.enemies.forEach((enemy) => {
+				if (!enemy.isAlive || !enemy.collides(projectile.position)) {
+					return;
+				}
+				enemy.hit();
+				projectile.kill();
+			});
 		});
 	}
 	public render = (elapsedTime: number) => {
