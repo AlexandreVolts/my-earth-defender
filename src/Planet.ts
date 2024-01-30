@@ -3,11 +3,12 @@ import { IDrawable } from "./IDrawable";
 
 export class Planet implements IDrawable {
   private static readonly ROTATE_SPEED = 0.1;
-  private static readonly DIAMETER = 60;
   private static readonly sprite = document.getElementById(
     "planet"
   ) as HTMLImageElement;
+  public static readonly DIAMETER = 60;
   private angle = 0;
+  
 
   public update(delta: number): void {
     this.angle += delta * Planet.ROTATE_SPEED;

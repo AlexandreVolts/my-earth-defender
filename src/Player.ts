@@ -1,20 +1,22 @@
+import { ABlinkSprite } from "./ABlinkSprite";
 import { App } from "./App";
 import { IDrawable } from "./IDrawable";
 import { Vector2 } from "./Vector2";
 
-export class Player implements IDrawable {
-  private static readonly SIZE = 35;
+export class Player extends ABlinkSprite implements IDrawable {
   private static readonly DISTANCE = 50;
   private static readonly sprite = document.getElementById(
     "player"
   ) as HTMLImageElement;
-  public origin: Vector2 = { x: 0, y: 0 };
+  public static readonly SIZE = 35;
   private angle = 0;
+  public origin: Vector2 = { x: 0, y: 0 };
 
   public update(delta: number): void {
-    
+    super.update(delta);
   }
   public draw(ctx: CanvasRenderingContext2D): void {
+    if (this.isBlinking) return;
     ctx.save();
     ctx.translate(this.position.x + this.origin.x, this.position.y + this.origin.y);
     ctx.rotate(this.angle + Math.PI);

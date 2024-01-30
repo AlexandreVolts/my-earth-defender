@@ -6,6 +6,7 @@ import { rand } from "../rand";
 export abstract class AEnemy implements IPooledObject {
   private static readonly MIN_SIZE = 35;
   private static readonly MAX_SIZE = 70;
+  private static readonly ATTRACTION = 20;
   private static readonly LIVES = 6;
   private static readonly HIT_DELAY = 0.3;
   private static readonly SCALE_RATIO = 0.1;
@@ -38,37 +39,46 @@ export abstract class AEnemy implements IPooledObject {
   }
   public update(delta: number): void {
     this.angle += delta;
-    this.distance -= delta * 10;
+    this.distance -= delta * AEnemy.ATTRACTION;
     this.hitDelay -= delta;
     if (this.lives <= 0) this.frame += delta;
     if (this.frame >= this.explosionFrames) {
       this._isAlive = false;
     }
   }
-  public collides(point: Vector2) {
+  public collides(point: Vector2, distance = 0) {
     const dist = Math.hypot(
       point.x - this.position.x,
       point.y - this.position.y
     );
 
     if (this.lives <= 0) return false;
-    return dist <= this.size / 2;
+    return dist <= this.size / 2 + distance;
   }
   public hit() {
     this.lives--;
     this.hitDelay = AEnemy.HIT_DELAY;
   }
+  public kill() {
+    this.lives = 0;
+  }
   public draw(ctx: CanvasRenderingContext2D): void {
-    const scale = { x: 1, y: 1 };
-    const framePosition = this.lives > 0 ? 0 : ((~~(this.frame / AEnemy.ANIMATION_SPEED)) + this.frames);
-    const frameSize = Math.floor(this.sprite.width / (this.frames + this.explosionFrames));
+    const framePosition =
+      this.lives > 0
+        ? 0
+        : ~~(this.frame / AEnemy.ANIMATION_SPEED) + this.frames;
+    const frameSize = Math.floor(
+      this.sprite.width / (this.frames + this.explosionFrames)
+    );
+    const scale = {
+      x: 1 + framePosition * AEnemy.EXPLOSITION_INFLATION_RATIO,
+      y: 1 + framePosition * AEnemy.EXPLOSITION_INFLATION_RATIO,
+    };
 
     if (this.hitDelay > 0) {
       scale.x += Math.random() * AEnemy.SCALE_RATIO;
       scale.y += Math.random() * AEnemy.SCALE_RATIO;
     }
-    scale.x += framePosition * AEnemy.EXPLOSITION_INFLATION_RATIO;
-    scale.y += framePosition * AEnemy.EXPLOSITION_INFLATION_RATIO;
     ctx.drawImage(
       this.sprite,
       framePosition * frameSize,
