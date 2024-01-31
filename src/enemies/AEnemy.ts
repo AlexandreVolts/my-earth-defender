@@ -7,7 +7,6 @@ export abstract class AEnemy implements IPooledObject {
   private static readonly MIN_SIZE = 35;
   private static readonly MAX_SIZE = 70;
   private static readonly ATTRACTION = 20;
-  private static readonly LIVES = 6;
   private static readonly HIT_DELAY = 0.3;
   private static readonly SCALE_RATIO = 0.1;
   private static readonly ANIMATION_SPEED = 0.1;
@@ -18,14 +17,15 @@ export abstract class AEnemy implements IPooledObject {
   private angle = 0;
   private lives = 0;
   private hitDelay = 0;
-  private frame = 0;
   private _isAlive = false;
+  protected frame = 0;
 
   constructor(
     private readonly sprite: HTMLImageElement,
     private readonly frames: number,
     private readonly skins: number,
-    private readonly explosionFrames: number
+    private readonly explosionFrames: number,
+    private readonly nbLives: number
   ) {}
 
   public trigger() {
@@ -34,14 +34,15 @@ export abstract class AEnemy implements IPooledObject {
     this.size = rand(AEnemy.MIN_SIZE, AEnemy.MAX_SIZE);
     this.distance = (App.DIAMETER + this.size) / 2;
     this.skin = ~~rand(0, this.skins);
-    this.lives = AEnemy.LIVES;
+    this.lives = this.nbLives;
     this.frame = 0;
   }
   public update(delta: number): void {
     this.angle += delta;
     this.distance -= delta * AEnemy.ATTRACTION;
     this.hitDelay -= delta;
-    if (this.lives <= 0) this.frame += delta;
+    if (this.lives > 0) return;
+    this.frame += delta;
     if (this.frame >= this.explosionFrames) {
       this._isAlive = false;
     }
@@ -58,38 +59,47 @@ export abstract class AEnemy implements IPooledObject {
   public hit() {
     this.lives--;
     this.hitDelay = AEnemy.HIT_DELAY;
+    if (this.lives <= 0) {
+      this.frame = 0;
+    }
   }
   public kill() {
     this.lives = 0;
+    this.frame = 0;
   }
   public draw(ctx: CanvasRenderingContext2D): void {
     const framePosition =
       this.lives > 0
-        ? 0
+        ? this.frame
         : ~~(this.frame / AEnemy.ANIMATION_SPEED) + this.frames;
     const frameSize = Math.floor(
       this.sprite.width / (this.frames + this.explosionFrames)
     );
-    const scale = {
-      x: 1 + framePosition * AEnemy.EXPLOSITION_INFLATION_RATIO,
-      y: 1 + framePosition * AEnemy.EXPLOSITION_INFLATION_RATIO,
-    };
+    const scale = { x: 1, y: 1 };
 
+    if (this.lives <= 0) {
+      scale.x *= framePosition * AEnemy.EXPLOSITION_INFLATION_RATIO;
+      scale.y *= framePosition * AEnemy.EXPLOSITION_INFLATION_RATIO;
+    }
     if (this.hitDelay > 0) {
       scale.x += Math.random() * AEnemy.SCALE_RATIO;
       scale.y += Math.random() * AEnemy.SCALE_RATIO;
     }
+    ctx.save();
+    ctx.translate(this.position.x, this.position.y);
+    ctx.rotate(this.angle);
     ctx.drawImage(
       this.sprite,
       framePosition * frameSize,
       this.skin * Math.floor(this.sprite.height / this.skins),
       this.sprite.width / (this.frames + this.explosionFrames),
       this.sprite.height / this.skins,
-      this.position.x - (this.size * scale.x) / 2,
-      this.position.y - (this.size * scale.y) / 2,
+      -(this.size * scale.x) / 2,
+      -(this.size * scale.y) / 2,
       this.size * scale.x,
       this.size * scale.y
     );
+    ctx.restore();
   }
 
   private get position(): Vector2 {

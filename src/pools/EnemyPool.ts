@@ -1,14 +1,16 @@
 import { Vector2 } from "../Vector2";
 import { AEnemy } from "../enemies/AEnemy";
 import { Asteroid } from "../enemies/Asteroid";
+import { Lobstermorph } from "../enemies/Lobstermorph";
 import { Pool } from "./Pool";
 
 export class EnemyPool extends Pool<AEnemy> {
   private static readonly COOLDOWN = 2;
   private cooldown = 0;
 
-  constructor(size: number) {
-    super(...Array.from({ length: size }).map(() => new Asteroid()));
+  constructor(size: number, nbLobstermorphes: number) {
+    super(...Array.from({ length: size - nbLobstermorphes }).map(() => new Asteroid()));
+    for (let i = 0; i < nbLobstermorphes; i++) this.push(new Lobstermorph());
   }
 
   public trigger(position: Readonly<Vector2>) {

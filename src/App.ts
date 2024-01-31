@@ -6,8 +6,7 @@ import { EnemyPool } from "./pools/EnemyPool";
 import { ProjectilePool } from "./pools/ProjectilePool";
 
 export class App {
-  private static readonly PLAYER_SHAKING_DELAY = 0.6;
-  private static readonly ENEMY_SHAKING_DELAY = 0.1;
+  private static readonly SHAKING_DELAY = 0.6;
   public static readonly DIAMETER = 800;
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
@@ -17,7 +16,7 @@ export class App {
   private readonly player = new Player();
   private readonly planet = new Planet();
   private readonly projectiles = new ProjectilePool(10);
-  private readonly enemies = new EnemyPool(10);
+  private readonly enemies = new EnemyPool(15, 3);
 
   private readonly gameElements: IDrawable[] = [];
   private lastDeltaTime = 0;
@@ -55,7 +54,7 @@ export class App {
     ) {
       enemy.kill();
       this.lives--;
-      this.shakingDelay = App.PLAYER_SHAKING_DELAY;
+      this.shakingDelay = App.SHAKING_DELAY;
       this.player.blink();
       return;
     }
@@ -67,7 +66,6 @@ export class App {
       }
       enemy.hit();
       projectile.kill();
-      this.shakingDelay = App.ENEMY_SHAKING_DELAY;
     });
   };
 
