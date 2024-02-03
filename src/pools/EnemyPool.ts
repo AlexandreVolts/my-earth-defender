@@ -5,7 +5,8 @@ import { Lobstermorph } from "../enemies/Lobstermorph";
 import { Pool } from "./Pool";
 
 export class EnemyPool extends Pool<AEnemy> {
-  private static readonly COOLDOWN = 2;
+  private static readonly COOLDOWN_DECREASE_SPEED = 0.01;
+  private cooldownLimit = 2;
   private cooldown = 0;
 
   constructor(size: number, nbLobstermorphes: number) {
@@ -16,7 +17,8 @@ export class EnemyPool extends Pool<AEnemy> {
   public trigger(position: Readonly<Vector2>) {
     if (this.cooldown > 0)
 			return;
-    this.cooldown = EnemyPool.COOLDOWN;
+    this.cooldown = this.cooldownLimit;
+    this.cooldownLimit -= EnemyPool.COOLDOWN_DECREASE_SPEED;
 		super.trigger(position);
   }
   public update(delta: number) {

@@ -1,4 +1,5 @@
 import { App } from "../App";
+import { Lifebar } from "../Lifebar";
 import { Vector2 } from "../Vector2";
 import { IPooledObject } from "../pools/IPooledObject";
 import { rand } from "../rand";
@@ -11,11 +12,12 @@ export abstract class AEnemy implements IPooledObject {
   private static readonly SCALE_RATIO = 0.1;
   private static readonly ANIMATION_SPEED = 0.1;
   private static readonly EXPLOSITION_INFLATION_RATIO = 0.3;
+  private readonly SPEED = rand(0.5, 1.5);
+  private lifebar: Lifebar;
   private skin = 0;
   private size = 0;
   private distance = 0;
   private angle = 0;
-  private lives = 0;
   private hitDelay = 0;
   private _isAlive = false;
   protected frame = 0;
@@ -25,8 +27,10 @@ export abstract class AEnemy implements IPooledObject {
     private readonly frames: number,
     private readonly skins: number,
     private readonly explosionFrames: number,
-    private readonly nbLives: number
-  ) {}
+    nbLives: number
+  ) {
+    this.lifebar = new Lifebar(nbLives);
+  }
 
   public trigger() {
     this._isAlive = true;
@@ -34,14 +38,14 @@ export abstract class AEnemy implements IPooledObject {
     this.size = rand(AEnemy.MIN_SIZE, AEnemy.MAX_SIZE);
     this.distance = (App.DIAMETER + this.size) / 2;
     this.skin = ~~rand(0, this.skins);
-    this.lives = this.nbLives;
+    this.lifebar.regenerate();
     this.frame = 0;
   }
   public update(delta: number): void {
-    this.angle += delta;
+    this.angle += delta * this.SPEED;
     this.distance -= delta * AEnemy.ATTRACTION;
     this.hitDelay -= delta;
-    if (this.lives > 0) return;
+    if (this.lifebar.isAlive) return;
     this.frame += delta;
     if (this.frame >= this.explosionFrames) {
       this._isAlive = false;
@@ -53,23 +57,23 @@ export abstract class AEnemy implements IPooledObject {
       point.y - this.position.y
     );
 
-    if (this.lives <= 0) return false;
+    if (!this.lifebar.isAlive) return false;
     return dist <= this.size / 2 + distance;
   }
   public hit() {
-    this.lives--;
+    this.lifebar.hit();
     this.hitDelay = AEnemy.HIT_DELAY;
-    if (this.lives <= 0) {
+    if (!this.lifebar.isAlive) {
       this.frame = 0;
     }
   }
   public kill() {
-    this.lives = 0;
+    this.lifebar.kill();
     this.frame = 0;
   }
   public draw(ctx: CanvasRenderingContext2D): void {
     const framePosition =
-      this.lives > 0
+      this.lifebar.isAlive
         ? this.frame
         : ~~(this.frame / AEnemy.ANIMATION_SPEED) + this.frames;
     const frameSize = Math.floor(
@@ -77,7 +81,7 @@ export abstract class AEnemy implements IPooledObject {
     );
     const scale = { x: 1, y: 1 };
 
-    if (this.lives <= 0) {
+    if (!this.lifebar.isAlive) {
       scale.x *= framePosition * AEnemy.EXPLOSITION_INFLATION_RATIO;
       scale.y *= framePosition * AEnemy.EXPLOSITION_INFLATION_RATIO;
     }
@@ -100,6 +104,7 @@ export abstract class AEnemy implements IPooledObject {
       this.size * scale.y
     );
     ctx.restore();
+    this.lifebar.draw(ctx, this.position, this.size);
   }
 
   private get position(): Vector2 {
@@ -107,6 +112,9 @@ export abstract class AEnemy implements IPooledObject {
       x: App.DIAMETER / 2 + Math.cos(this.angle) * this.distance,
       y: App.DIAMETER / 2 + Math.sin(this.angle) * this.distance,
     };
+  }
+  public get hasLives(): boolean {
+    return this.lifebar.isAlive;
   }
   public get isAlive(): boolean {
     return this._isAlive;

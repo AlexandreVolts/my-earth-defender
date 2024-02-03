@@ -2,6 +2,7 @@ import { IDrawable } from "./IDrawable";
 import { Planet } from "./Planet";
 import { Player } from "./Player";
 import { AEnemy } from "./enemies/AEnemy";
+import { Asteroid } from "./enemies/Asteroid";
 import { EnemyPool } from "./pools/EnemyPool";
 import { ProjectilePool } from "./pools/ProjectilePool";
 
@@ -22,6 +23,7 @@ export class App {
   private lastDeltaTime = 0;
   private isMouseDown = false;
   private lives = 3;
+  private score = 0;
   private shakingDelay = 0;
 
   constructor() {
@@ -66,6 +68,7 @@ export class App {
       }
       enemy.hit();
       projectile.kill();
+      if (!enemy.hasLives) this.score += enemy instanceof Asteroid ? 1 : 2;
     });
   };
 
@@ -74,6 +77,13 @@ export class App {
     this.gameElements.forEach((elem) => elem.update(delta));
     this.enemies.forEach(this.handleEnemy);
     this.shakingDelay -= delta;
+  }
+  public drawUi() {
+    this.ctx.textAlign = "center";
+    this.ctx.fillStyle = "white";
+    this.ctx.font = "25px bold";
+    this.ctx.fillText(`Lives: ${this.lives}`, App.DIAMETER / 2, 25);
+    this.ctx.fillText(`Score: ${this.score * 100}`, App.DIAMETER / 2, 50);
   }
   public render = (elapsedTime: number) => {
     this.ctx.clearRect(0, 0, App.DIAMETER, App.DIAMETER);
@@ -84,6 +94,7 @@ export class App {
     }
     this.ctx.drawImage(this.background, 0, 0, App.DIAMETER, App.DIAMETER);
     this.gameElements.forEach((elem) => elem.draw(this.ctx));
+    this.drawUi();
     this.ctx.restore();
     this.lastDeltaTime = elapsedTime;
     requestAnimationFrame(this.render);
