@@ -8,6 +8,7 @@ import { ProjectilePool } from "./pools/ProjectilePool";
 
 export class App {
   private static readonly SHAKING_DELAY = 0.6;
+  private static readonly NB_LIVES = 3;
   public static readonly DIAMETER = 800;
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
@@ -22,9 +23,10 @@ export class App {
   private readonly gameElements: IDrawable[] = [];
   private lastDeltaTime = 0;
   private isMouseDown = false;
-  private lives = 3;
+  private lives = App.NB_LIVES;
   private score = 0;
   private shakingDelay = 0;
+  private bestScore = parseInt(localStorage.getItem("best") || "0");
 
   constructor() {
     this.canvas = document.getElementsByTagName("canvas")[0];
@@ -42,10 +44,22 @@ export class App {
     });
     window.addEventListener("mousedown", () => (this.isMouseDown = true));
     window.addEventListener("mouseup", () => (this.isMouseDown = false));
+    window.addEventListener("keydown", () => {
+      if (this.lives < 0) this.reset();
+    });
     this.render(0);
   }
 
-  public handleEnemy = (enemy: AEnemy) => {
+  private reset() {
+    this.lives = App.NB_LIVES;
+    this.score = 0;
+  }
+  private saveScore() {
+    if (this.score <= this.bestScore) return;
+    this.bestScore = this.score;
+    localStorage.setItem("best", this.bestScore.toString());
+  }
+  private handleEnemy = (enemy: AEnemy) => {
     if (!enemy.isAlive) return;
     if (
       enemy.collides(
@@ -56,6 +70,10 @@ export class App {
     ) {
       enemy.kill();
       this.lives--;
+      if (this.lives === 0) {
+        this.saveScore();
+        this.enemies.forEach((e) => e.kill());
+      }
       this.shakingDelay = App.SHAKING_DELAY;
       this.player.blink();
       return;
@@ -73,7 +91,9 @@ export class App {
   };
 
   public update(delta: number) {
-    if (this.isMouseDown) this.projectiles.trigger(this.player.position);
+    if (this.lives > 0) this.enemies.trigger({ x: 0, y: 0 });
+    if (this.isMouseDown)
+      this.projectiles.trigger(this.player.position);
     this.gameElements.forEach((elem) => elem.update(delta));
     this.enemies.forEach(this.handleEnemy);
     this.shakingDelay -= delta;
@@ -82,8 +102,28 @@ export class App {
     this.ctx.textAlign = "center";
     this.ctx.fillStyle = "white";
     this.ctx.font = "25px bold";
-    this.ctx.fillText(`Lives: ${this.lives}`, App.DIAMETER / 2, 25);
-    this.ctx.fillText(`Score: ${this.score * 100}`, App.DIAMETER / 2, 50);
+    if (this.lives > 0) {
+      this.ctx.fillText(`Lives: ${this.lives}`, App.DIAMETER / 2, 25);
+      this.ctx.fillText(`Score: ${this.score * 100}`, App.DIAMETER / 2, 50);
+      return;
+    }
+    this.ctx.fillText(
+      `Your score: ${this.score * 100}`,
+      App.DIAMETER / 2,
+      App.DIAMETER * 0.4
+    );
+    this.ctx.fillText(
+      `Your best score: ${this.bestScore * 100}`,
+      App.DIAMETER / 2,
+      App.DIAMETER * 0.6
+    );
+    this.ctx.fillText(
+      "Press any key to restart.",
+      App.DIAMETER / 2,
+      App.DIAMETER * 0.7
+    );
+    this.ctx.font = "50px bold";
+    this.ctx.fillText("Game over!", App.DIAMETER / 2, App.DIAMETER * 0.3);
   }
   public render = (elapsedTime: number) => {
     this.ctx.clearRect(0, 0, App.DIAMETER, App.DIAMETER);

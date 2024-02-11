@@ -24,6 +24,5 @@ export class EnemyPool extends Pool<AEnemy> {
   public update(delta: number) {
     super.update(delta);
     this.cooldown -= this.cooldown <= 0 ? 0 : delta;
-    this.trigger({ x: 0, y: 0 });
   }
 }
